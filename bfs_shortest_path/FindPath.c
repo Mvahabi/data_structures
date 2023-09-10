@@ -12,7 +12,9 @@ pa2 - FindPath.c - File Input/Output
 #include <ctype.h>
 #include "Graph.h"
 
-int main(int argc, char * argv[]){
+// Citation: Professor Tantalo's prompt for FileI/O
+
+int main(int argc, char * argv[]) {
 
     // needed variables
     int n, u, v; // n = #vertices; u, v = vertex of two edges
@@ -39,38 +41,63 @@ int main(int argc, char * argv[]){
         exit(1);
     }
 
-    // scan the first line or first digit to get # vertex
+    // scan the very first digit which gives us the # vertex
     fscanf(in, " %d", &n);
 
-    // initialize a new graph with "n"
-    // initialize u and v to 1 temporarly
+    // create the graph
+    G = newGraph(n);
 
-    // while u or v are not 0:
-        //scan u and v
-        // check if either are 0 and break
-        // call addEdge on u and v
-    
+    // initialize to a non 0 value
+    u = v = 1;
+
+    // scan till u and v are 0 and add each edges
+    while (u != 0 || v != 0) {
+        fscanf(in, " %d", &u);
+        fscanf(in, " %d", &v);
+        if (u == 0 && v == 0) {
+            break;
+        }
+        addEdge(G, u, v);
+   }
+   
     // print graph and make a new list for the path findings.
+    printGraph(out, G);
+    L = newList();
 
     // reset the vertices of the edges
+    u = v = 1;
 
-    // while u or v are not 0:
-        //scan u and v
-        // check if either are 0 and break
-        // call BFS on u
-        // call getPath on v
-        // this is where you have to print out the statements:
+    // continue scanning for the rest of the file
+    // while both vertices are not 0, perform BFS, 
+    // find distance from one to another and shortest path
+    while (u != 0 || v != 0) {
+        fscanf(in, " %d", &u);
+        fscanf(in, " %d", &v);
+
+        if (u == 0 && v == 0) {
+            break;
+        }
+
+        BFS(G, u);
+        getPath(L, G, v);
         
-        // if length of the list is 0 or the distance of v is negative 
+        if (length(L) == 0 || getDist(G, v) < 0) {
             fprintf(out, "\nThe distance from %d to %d is infinity\n", u, v);
             fprintf(out, "No %d-%d path exists\n", u, v);
-
-        // else:
+        }
+        else {
             fprintf(out, "\nThe distance from %d to %d is %d\n", u, v, getDist(G, v));
             fprintf(out, "A shortest %d-%d path is: ", u, v);
-            // print the list to out
-
-        // clear the list
+            printList(out, L);
+        }
+        clear(L);
+    }
 
     // free all graphs, lists, and close all files
+    freeGraph(&G);
+    freeList(&L);
+    fclose(in);
+    fclose(out); 
+
+    return 0;
 }

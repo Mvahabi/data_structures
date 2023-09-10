@@ -1,3 +1,12 @@
+/*
+Mahyar Mike Vahabi
+mvahabi
+Winter 22 - CSE101 - pa2
+Graph.c - Graph ADT
+*/
+
+// Citation: Professor Tantalo's PsudoCode, notes, and queue.c implementation
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -5,194 +14,296 @@
 
 // private Graph object type 
 typedef struct GraphObj {
-    List* adj;
+    List* list;
     char* color;  // array of color of vertex "i"
     int* parent; // array of parent of vertex "i"
-    int* dist;   // a
+    int* dist;   // array of distance from source to vertex "i"
     int order;   // stores #vertices = n
     int size;    // # of edges
     int source;  // label for recent vertex used as source
 }GraphObj;
 
-Graph newGraph(int n){
-    // BASE CASE:
-    // if the number of vertices is less than 1 it fails
-    // allocate Graph "G" with size of GraphObj
-    // if your graph G exists:
-        // set order to number of vertices, size to 0
-        // allocate each array of the object member * n+1
-        // G->color = malloc(sizeof(char) *n+1);
-        // iterate "i" from 0->n (inclusive):
-        /* example:
-        for (int i = 1; i<= n; i++){
-            G->adj[i] = newList();
-        }*/
-            // create a adjacent list with newList
-            // set color to "white", parent to NIL, dist to INF
-    // return G
+// constructor for graph
+Graph newGraph(int n) {
+    if (n<0) {
+        fprintf(stderr, "Error in newGraph(). Can't graph 0 or negative vertices.\n");
+        exit(EXIT_FAILURE);
+    }
+    Graph G = malloc(sizeof(GraphObj));
+    if (G) {
+        G->order = n;
+        G->size = 0;
+        G->source = NIL;
+        G->list = malloc(sizeof(List) * n+1);
+        G->color = malloc(sizeof(char) * n+1);
+        G->parent = malloc(sizeof(int) * n+1);
+        G->dist = malloc(sizeof(int) * n+1);
+        for (int i = 1; i < n+1; i++) {
+            G->list[i] = newList();
+            G->color[i] = 'w';
+            G->parent[i] = NIL;
+            G->dist[i] = INF;
+        }
+    }
+    return G;
 }
-void freeGraph(Graph* pG){
-    // int n, i;
-    // if graph pG and *pG is not null
-        // n to order;
-        // iterate i from 1->n (inclusive) call freeList on adjacentList
-        // free the rest of the object memebers 
-        // free((*pG)->color));
-        // free graph and set it to null
+
+// destructor for graph
+void freeGraph(Graph* pG) {
+    if (!pG){
+        fprintf(stderr, "Error in FreeGraph(). Can not free an empty graph.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (pG && *pG) {
+        for (int i = 1; i < (*pG)->order + 1; i++) {
+            freeList(&(*pG)->list[i]);
+        }
+        free((*pG)->color);
+        free((*pG)->parent);
+        free((*pG)->dist);
+        free(*pG);
+        *pG = NULL;
+    }
 }
-/*** Access functions ***/
 
-// BASE CASE:
-/* 
-if( G==NULL ){
-    fprintf(stderr, "Graph Error: <function_name> called on NULL Graph\n");
-    exit(1);
-}*/
-
+// returns number of vertices
 int getOrder(Graph G){
-// BASE CASE
-// return order
+    if (!G) { 
+        fprintf(stderr, "Error in getOrder(). Empty graph.\n");
+        exit(EXIT_FAILURE);
+    }
+    return G->order;
 }
+
+// returns number of edges
 int getSize(Graph G){
-// BASE CASE
-// return size
+    if (!G) {
+        fprintf(stderr, "Error in getSize(). Empty graph.\n");
+        exit(EXIT_FAILURE);
+    }
+    return G->size;
 }
+
+// returns the source vertex used in BFS() or nil if BFS() wasn't called
 int getSource(Graph G){
-// BASE CASE
-// return source
+    if (!G) {
+        fprintf(stderr, "Error in getSource(). Empty graph.\n");
+        exit(EXIT_FAILURE);
+    }
+    return G->source;
 }
+
+// return the parent of vertex u in BFS() or nul if BFS() wasn't called
 int getParent(Graph G, int u){
-// BASE CASE
-// wasn't called 
-// if u is negatice or it is greater than the number of vertex: u >getOrder(G)
-    // program fails
-// return the parent of vertex u in BFS() or nul if BFS()
+    if (!G) {
+        fprintf(stderr, "Error in getParent(). Empty graph.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (u < 0 || u > getOrder(G)) {
+        fprintf(stderr, "Error in getParent(). U is out of range.\n");
+        exit(EXIT_FAILURE);
+    } else {
+        return G->parent[u];
+    }
 }
+
+// returns the distance from the most recent BFS source to vertex u, or INF if BFS()
 int getDist(Graph G, int u){
-// BASE CASE
-// if source is negatice return inf
-// if u is less than 1 or greater than the number of vertices
-    // program fails
-// returns the distance from the most recent BFS source to vertex u
+    if (!G) {
+        fprintf(stderr, "Error in getDist(). Empty graph.\n");
+        exit(EXIT_FAILURE);
+    }
+     if(G->source < 0){
+        return INF;
+    }
+    if (u < 1 || u > getOrder(G)) {
+        fprintf(stderr, "Error in getDist(). U is out of range.\n");
+        exit(EXIT_FAILURE);
+    } else {
+        return G->dist[u];
+    }
 }
-void getPath(List L, Graph G, int u){
-// BASE CASES
-// program will fail if:
-    // graph or list don't exist
-    // BFS not called == source is not found
-    // invalid "u" value
-// if "u" equals to the source: append source to List
-// elif parent of "u" equals NIL: append NIL to List
-// else: recursively call getPath on the parent of "u"
-        // append "u" to List
+
+// appends to the List L the vertices of a shortest path in G from source to u, or 
+// appends to L the value NIL if no such path exists
+void getPath(List L, Graph G, int u) {
+    if (!G || !L) {
+        fprintf(stderr, "Error in getPath(). Empty graph or empty list.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (getSource(G) == NIL) {
+        fprintf(stderr, "Error in getPath(). BFS was not called/no source given or found.\n");
+        exit(EXIT_FAILURE);
+    } 
+    if (u < 1 || u > getOrder(G)) {
+        fprintf(stderr, "Error in getPath(). Invalid 'u'.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (u == G->source) {
+        append(L, G->source);
+    } else if (G->parent[u] == NIL) {
+        append(L, NIL);
+    } else {
+        getPath(L, G, G->parent[u]);
+        append(L, u);
+    }
 }
-/*** Manipulation procedures ***/
-void makeNull(Graph G){
-// BASE CASE
-// set n back to original order, size to 0, source to NIL
-// iterate through:
-    // the arrays of parent and set them to NIL
-    // the arrays of distance to INF, color to "white"
-    // and call clear on the adjacentList
+
+// deletes all edges of G
+void makeNull(Graph G) {
+    if (!G) {
+        fprintf(stderr, "Error in makeNull(). Empty graph.\n");
+        exit(EXIT_FAILURE);
+    }
+    freeGraph(&G);
+    newGraph(G->order);
 }
-void addEdge(Graph G, int u, int v){
-// BASE CASE
-// program will fail if:
-    // graph doesn't exist
-    // "u" or "v" are out of range
-List A = G->adj[u];
-List B = G->adj[v];
 
-// place v in the adjacency list of u, preserving sort   
-// move to the front of adj[u]
-// if length of that list is 0:
-    // append v to adj list[u]
-// else:
-    // move to the front of the adj[u]
-    // while the data of adj[u] is less than vertex v
-        // move next
-        // if index is out of range then break
-    // if the index of adj[u] equals -1:
-        // append v
-    // else:
-        // insert v before the cursor
+//nserts a new edge joining u to v, i.e. u is added to the adjacency List of v, 
+//and v to the adjacency List of u. 
+void addEdge(Graph G, int u, int v) {
+    if (!G) {
+        fprintf(stderr, "Error in addEdge(). Empty graph.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (u < 0 || v < 0) {
+        fprintf(stderr, "Error in addEdge(). Invalid u or v.\n");
+        exit(EXIT_FAILURE);
+    }
 
-    // ******** write the same thing but for v **********
+    // connect u, v
+    moveFront(G->list[u]);
+    bool bool_flag = true;
+    if (length(G->list[u]) == 0) {
+        append(G->list[u], v);
+        bool_flag = false;
+    }
+    while (bool_flag && index(G->list[u]) >= 0 && index(G->list[u]) < length(G->list[u])) {
+        if (get(G->list[u]) >= v) {
+            insertBefore(G->list[u], v);
+            bool_flag = false;
+        }
+        else if (index(G->list[u]) == (length(G->list[u]) - 1)) {
+            append(G->list[u], v);
+            bool_flag = false;
+        } else {
+            moveNext(G->list[u]);
+        }
+    }
 
-// increment the size of the graph
+    // connect v, u
+    moveFront(G->list[v]);
+    bool_flag = true;
+    if (length(G->list[v]) == 0) {
+            append(G->list[v], u);
+            bool_flag = false;
+    }
+    while (bool_flag && index(G->list[v]) >= 0 && index(G->list[v]) < length(G->list[v])) {
+        if (get(G->list[v]) >= u) {
+            insertBefore(G->list[v], u);
+            bool_flag = false;
+        }
+        else if (index(G->list[v]) == (length(G->list[v]) - 1)) {
+            append(G->list[v], u);
+            bool_flag = false;
+        } else {
+            moveNext(G->list[v]);
+        }
+    }
+    G->size++;
 }
-void addArc(Graph G, int u, int v){
-// BASE CASE
-// program will fail if:
-    // graph doesn't exist
-    // "u" or "v" are out of range
 
-// place v in the adjacency list of u, preserving sort
-// move to the front of adj[u]
-// if length of that list is 0:
-    // append v to adj list
-// else:
-    // move to the front of the adj[u]
-    // while the data of adj[u] is less than vertex v
-        // move next
-        // if index is out of range then break
-    // if the index of adj[u] equals -1:
-        // append v
-    // else:
-        // insert v before the cursor
-// increment the size of the graph
+// adds a directed edge
+void addArc(Graph G, int u, int v) {
+    if (!G) {
+        fprintf(stderr, "Error in addArc(). Empty graph.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (u < 0 || v < 0) {
+        fprintf(stderr, "Error in addArc(). Invalid u or v.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // connect u, v but not other way around
+    moveFront(G->list[u]);
+    bool bool_flag = true;
+    if (length(G->list[u]) == 0) {
+        append(G->list[u], v);
+        bool_flag = false;
+    }
+    while (bool_flag && index(G->list[u]) >= 0 && index(G->list[u]) < length(G->list[u])) {
+        if (get(G->list[u]) >= v) {
+            insertBefore(G->list[u], v);
+            bool_flag = false;
+        }
+        else if (index(G->list[u]) == (length(G->list[u]) - 1)) {
+            append(G->list[u], v);
+            bool_flag = false;
+            } else {
+            moveNext(G->list[u]);
+        }
+    }
+    G->size++;
 }
-void BFS(Graph G, int s){
-// Program will fail if:
-    // Graph doesn't exists or "s" is negative
-// iterate through:
-    // set the array of colors to "white"
-    // set the arrays of dist to INF and parent to NIL
-/*
-source = s
-color[𝑠] = gray // discover the source 𝑠
-𝑑[𝑠] = 0
-𝑝[𝑠] = nil
-𝑄 = LinkedList // construct a new empty list
-move to the front of the adjacent list of "s"
-Enqueue(𝑄, 𝑠)  // append
-while 𝑄 ≠ ∅    // while length of the list is not 0 
-    move to the front of Q
-    𝑥 = Dequeue(𝑄)  // use the LinkedList get function
-    move to the front of the adjacent list of 𝑥
-    iterate through the lists in adj[𝑥]:
 
+// perform Breadth First Search
+void BFS(Graph G, int s) {
+    if (!G) {
+        fprintf(stderr, "Error in addArc(). Empty graph.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (s <= 0) {
+        fprintf(stderr, "Error in BFS(). Invalid 's' input.\n");
+        exit(EXIT_FAILURE);
+    }
 
-
-    for (int iter = 1; i <= length(G->adj[x]), iter++){
-        int y = get(adj[x]); // set y to the data of the adj[𝑥]
-        if color[𝑦] == white // 𝑦 is undiscovered
-            color[𝑦] = gray // discover 𝑦
-            𝑑[𝑦] = 𝑑[𝑥] + 1
-            𝑝[𝑦] = 𝑥
-            Enqueue(𝑄, 𝑦)   // append
-        move next on the adj[𝑥]
-    color[𝑥] = black // finish 𝑥
-    delete front on Q
-free Q
-*/
-
+    for(int i = 1; i < G->order + 1; i++) {
+        G->color[i] = 'w';
+        G->dist[i] = INF; 
+        G->parent[i] = NIL;
+    }
+    
+    G->source = s;
+    G->color[s] = 'g';
+    G->dist[s] = 0;
+    G->parent[s] = NIL;
+    List Q = newList();
+    moveFront(G->list[s]);
+    append(Q, s);
+    while (length(Q) != 0) {
+        moveFront(Q);
+        int x = get(Q);
+        moveFront(G->list[x]);
+        for (int iter = 1; iter <= length(G->list[x]); iter++){
+            int y = get(G->list[x]);
+            if (G->color[y] == 'w') {
+                G->color[y] = 'g';
+                G->dist[y] = G->dist[x]+1;
+                G->parent[y] = x;
+                append(Q, y);
+            }
+            moveNext(G->list[x]);
+        }
+        G->color[x] = 'b';
+        deleteFront(Q);
+    }
+    freeList(&Q);
 }
-/*** Other operations ***/
+
+//prints the adjacency list representation of G to the file pointed to by out
 void printGraph(FILE* out, Graph G){
     if (!G) {
         fprintf(stderr, "Error in pringGraph(). empty graph.\n");
         exit(EXIT_FAILURE);
     }
+
     for(int i = 1; i <= G->order; i++){
-        moveFront(G->adj[i]);
+        moveFront(G->list[i]);
         fprintf(out, "%d: ",i );
-        while(index(G->adj[i]) >  -1){
-            fprintf(out, "%d ", get(G->adj[i]));
-            moveNext(G->adj[i]);
+        while(index(G->list[i]) >  -1){
+            fprintf(out, "%d ", get(G->list[i]));
+            moveNext(G->list[i]);
         }
         fprintf(out, "\n");
     }
 }
-
-
