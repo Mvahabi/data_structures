@@ -19,7 +19,6 @@ void shuffle(List& D) {
 
     List left, right;
     int i = 0;
-
     D.moveFront();
     while (D.position() < D.length()) {
         if (i < floor(D.length() / 2)) {
@@ -86,3 +85,4 @@ int main(int argc, char * argv[]){
 
     return(EXIT_SUCCESS);
 }
+

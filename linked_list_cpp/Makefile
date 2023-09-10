@@ -37,4 +37,3 @@ check1 : ListClient
 
 check2 : Shuffle
 	valgrind --leak-check=full Shuffle 35
-

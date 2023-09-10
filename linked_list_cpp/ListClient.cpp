@@ -1,10 +1,7 @@
-/* 
-Mahyar Mike Vahabi
-mvahabi
-Winter 22 - CSE101 - pa5
-ListTest.cpp - Personal Test for the List ADTs
-*/
-
+//-----------------------------------------------------------------------------
+// ListTest.cpp
+// A test client for List ADT
+//-----------------------------------------------------------------------------
 #include<iostream>
 #include<string>
 #include<stdexcept>
@@ -67,7 +64,7 @@ int main(){
    cout << "C==D is " << (C==D?"true":"false") << endl;
    cout << "D==A is " << (D==A?"true":"false") << endl;
    cout << endl;
-
+/*
    cout << B.findNext(5) << endl;
    cout << B << endl;
    B.eraseBefore();
@@ -84,7 +81,7 @@ int main(){
    cout << B.findPrev(20) << endl;
    cout << B.position() << endl;
    cout << endl;
-
+*/
    for( i=10; i>=1; i--){
       A.insertAfter(i);
       A.movePrev();
@@ -98,11 +95,11 @@ int main(){
    cout << "A = " << A << endl;
    cout << A.position() << endl;
    cout << endl;
-   
-   /*List E = A;
+
+   List E = A;
    cout << "E==A is " << (E==A?"true":"false") << endl;
-  
-   cout << endl;*/
+
+   cout << endl;
 
    List F = A.concat(B);
    cout << "F = " << F << endl;
@@ -110,7 +107,7 @@ int main(){
    cout << "front: " << F.front() << endl;
    cout << "back: " << F.back() << endl;
    cout << "position: " << F.position() << endl;
-   for( i=1; i<=7; i++){
+   /*for( i=1; i<=7; i++){
       cout << "peekNext: " << F.peekNext() << endl;
       F.insertBefore(-i);
       cout << F.moveNext() << endl; 
@@ -122,7 +119,7 @@ int main(){
    cout << "test exceptions: " << endl;
    cout << "A = " << A << endl;
    A.moveFront();
-   /*try{
+   try{
       A.peekPrev();
    }catch( std::range_error& e ){
       cout << e.what() << endl;

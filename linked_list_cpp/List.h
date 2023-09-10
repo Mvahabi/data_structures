@@ -33,8 +33,8 @@ private:
    Node* backDummy;
    Node* beforeCursor;
    Node* afterCursor;
-   int ind;  // index
-   int size; // number of elements
+   int pos_cursor;
+   int num_elements;
 
 public:
 
@@ -197,4 +197,3 @@ public:
 
 
 #endif
-

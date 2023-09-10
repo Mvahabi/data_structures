@@ -32,8 +32,8 @@ List::List() {
     beforeCursor = frontDummy;
     afterCursor = backDummy;
 
-    size = 0;
-    ind = 0;
+    num_elements = 0;
+    pos_cursor = 0;
 }
 
 List::List(const List& L){
@@ -45,8 +45,8 @@ List::List(const List& L){
     beforeCursor = frontDummy;
     afterCursor = backDummy;
 
-    size = 0;
-    ind = 0;
+    num_elements = 0;
+    pos_cursor = 0;
 
     Node* N = L.frontDummy->next;
     while(N != backDummy && N->data != backDummy->data) {
@@ -61,7 +61,7 @@ List::~List(){
     delete backDummy;
 }
 int List::length() const{
-    // return size;
+    return num_elements;
 }
 
 ListElement List::front() const{
@@ -79,10 +79,10 @@ ListElement List::back() const{
 }
 
 int List::position() const{
-    if(ind < 0 || ind > length()){
+    if(pos_cursor < 0 || pos_cursor > length()){
         throw std::length_error("Error in position(). Empty List");
     }
-    return (ind);
+    return (pos_cursor);
 }
 
 ListElement List::peekNext() const{
@@ -101,7 +101,7 @@ ListElement List::peekPrev() const{
 
 void List::clear() {
     while (length() > 0) {
-        ind = 0;
+        pos_cursor = 0;
         moveFront();
         eraseAfter();
     }
@@ -112,7 +112,7 @@ void List::moveFront() {
         throw std::length_error("Error in moveFront(). Empty list");
     }
     else {
-        ind = 0;
+        pos_cursor = 0;
         beforeCursor = frontDummy;
         afterCursor = frontDummy->next;
     }
@@ -123,7 +123,7 @@ void List::moveBack() {
          std::length_error("Error in moveBack(). Empty list");
     }
     else {
-        ind = length();
+        pos_cursor = length();
         beforeCursor = backDummy->prev;
         afterCursor = backDummy;
     }
@@ -135,7 +135,7 @@ ListElement List::moveNext() {
     }
     beforeCursor = afterCursor;
     afterCursor = afterCursor->next;
-    ind++;
+    pos_cursor++;
     return beforeCursor->data;
 }
 
@@ -146,7 +146,7 @@ ListElement List::movePrev() {
     }
     afterCursor = beforeCursor;
     beforeCursor = beforeCursor->prev;
-    ind--;
+    pos_cursor--;
     return afterCursor->data;
 }
 
@@ -164,7 +164,7 @@ void List::insertAfter(ListElement x) {
     }
     afterCursor = N;
   
-    size++;
+    num_elements++;
 }
 
 void List::insertBefore(ListElement x) {
@@ -181,8 +181,8 @@ void List::insertBefore(ListElement x) {
     }      
     beforeCursor = N;
 
-    ind++;
-    size++;
+    pos_cursor++;
+    num_elements++;
 }
 
 void List::setAfter(ListElement x){
@@ -202,24 +202,35 @@ void List::eraseAfter(){
     if (position() >= length()) {
         throw std::range_error("Error in eraseAfter(). Cursor at the back");
     }
+    beforeCursor = afterCursor->prev;
+
+    Node *temp = afterCursor;
 
     afterCursor = afterCursor->next;
     afterCursor->prev = beforeCursor;
     beforeCursor->next = afterCursor;
 
-    size--;
+    delete temp;
+
+    num_elements--;
 }
 void List::eraseBefore() {
     if (position() <= 0) {
         throw std::range_error("Error in eraseBefore(). Cursor at front");
     }
 
+    beforeCursor = afterCursor->prev;
+
+    Node *temp = beforeCursor;
+
     beforeCursor = beforeCursor->prev;
     beforeCursor->next = afterCursor;
     afterCursor->prev = beforeCursor;
 
-    size--;
-    ind--;
+    delete temp;
+
+    num_elements--;
+    pos_cursor--;
 }
 
 int List::findNext(ListElement x) {
@@ -227,18 +238,18 @@ int List::findNext(ListElement x) {
     bool flag = false;
     Node* temp = afterCursor;
 
-    while (!flag && temp != backDummy && ind < length()) {
+    while (!flag && temp != backDummy && pos_cursor < length()) {
         flag = (temp->data == x);
         if (!flag){
             temp = temp->next;
         }
-        ind++;
+        pos_cursor++;
     }
     beforeCursor = temp;
     afterCursor = temp->next;
 
     if (flag) {
-        return ind;
+        return pos_cursor;
     } else {
         return -1;
     }
@@ -249,18 +260,18 @@ int List::findPrev(ListElement x) {
     bool flag = false;
     Node* temp = beforeCursor;
 
-    while (!flag && temp != frontDummy && ind > 0) {
+    while (!flag && temp != frontDummy && pos_cursor > 0) {
         flag = (temp->data == x);
         if (!flag){
             temp = temp->prev;
         }
-        ind--;
+        pos_cursor--;
     }
     beforeCursor = temp->prev;
     afterCursor = temp;
 
     if (flag){
-        return ind;
+        return pos_cursor;
     } else {
         return -1;
     }
@@ -279,14 +290,14 @@ void List::cleanup() {
             if (flag) {
                 N->prev->next = N->next;
                 N->next->prev = N->prev;
-                size--;
+                num_elements--;
                 if (N == beforeCursor){
                     beforeCursor = beforeCursor->prev;
                 } else if (N == afterCursor) {
                     afterCursor = afterCursor->next;
                 }
-                if(ind >= i)
-                    ind--;
+                if(pos_cursor >= i)
+                    pos_cursor--;
             } else {
                 temp = temp->next;
             }
@@ -294,7 +305,7 @@ void List::cleanup() {
         N = next;
         i++;
     }
-    ind = length();
+    pos_cursor = length();
 }
  
 List List::concat(const List& L) const{
@@ -328,7 +339,7 @@ bool List::equals(const List& R) const{
    Node* N = nullptr;
    Node* M = nullptr;
 
-   eq = (this->size == R.size);
+   eq = (this->num_elements == R.num_elements);
    N = this->frontDummy;
    M = R.frontDummy;
    while(eq && N!=nullptr){
@@ -357,9 +368,11 @@ List& List::operator=( const List& L ){
       std::swap(backDummy, temp.backDummy);
       std::swap(beforeCursor, temp.beforeCursor);
       std::swap(afterCursor, temp.afterCursor);
-      std::swap(size, temp.size);
-      std::swap(ind, temp.ind);
+      std::swap(num_elements, temp.num_elements);
+      std::swap(pos_cursor, temp.pos_cursor);
    }
 
    return *this;
 }
+
+
