@@ -1,7 +1,7 @@
 /*
 Mahyar Mike Vahabi
 mvahabi
-Winter 22 - CSE101
+Winter 22 - CSE101 - pa3
 List.h - List ADT header file
 */
 
@@ -49,7 +49,7 @@ void insertAfter(List L, int x); // Insert new element after cursor.
  // Pre: length()>0, index()>=0
 void deleteFront(List L); // Delete the front element. Pre: length()>0
 void deleteBack(List L); // Delete the back element. Pre: length()>0
-void delete_(List L); // Delete cursor element, making cursor undefined.
+void delete(List L); // Delete cursor element, making cursor undefined.
  // Pre: length()>0, index()>=0
 // Other operations -----------------------------------------------------------
 void printList(FILE* out, List L); // Prints to the file pointed to by out, a

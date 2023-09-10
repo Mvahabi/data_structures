@@ -1,32 +1,31 @@
 /*
 Mahyar Mike Vahabi
 mvahabi
-Winter 22 - CSE101 - pa2
+Winter 22 - CSE101 - pa3
 Graph.h - Graph ADT header file
 */
 
 #include "List.h"
 #define NIL 0
-#define INF -1
+#define UNDEF -1
 
 // Set "Graph" alais to GraphObj
 typedef struct GraphObj* Graph;
 
 /*** Constructors-Destructors ***/
-// Constructors-Destructors
 Graph newGraph(int n);
 void freeGraph(Graph* pG);
-// Access functions
+/*** Access functions ***/
 int getOrder(Graph G);
 int getSize(Graph G);
-int getParent(Graph G, int u); /* Pre: 1<=u<=n=getOrder(G) */
-int getDiscover(Graph G, int u); /* Pre: 1<=u<=n=getOrder(G) */
-int getFinish(Graph G, int u); /* Pre: 1<=u<=n=getOrder(G) */
-// Manipulation procedures
-void addArc(Graph G, int u, int v); /* Pre: 1<=u<=n, 1<=v<=n */
-void addEdge(Graph G, int u, int v); /* Pre: 1<=u<=n, 1<=v<=n */
-void DFS(Graph G, List S); /* Pre: length(S)==getOrder(G) */
-// Other Functions
+int getParent(Graph G, int u);
+int getDiscover(Graph G, int u);
+int getFinish(Graph G, int u);
+/*** Manipulation procedures ***/
+void addEdge(Graph G, int u, int v);
+void addArc(Graph G, int u, int v);
+void DFS(Graph G, List S);
+/*** Other operations ***/
 Graph transpose(Graph G);
 Graph copyGraph(Graph G);
-void printGraph(FILE* out , Graph G);
+void printGraph(FILE* out, Graph G);

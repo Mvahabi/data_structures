@@ -1,8 +1,8 @@
 /*
 Mahyar Mike Vahabi
 mvahabi
-Winter 22 - CSE101 - pa2
-pa2 - FindPath.c - File Input/Output
+Winter 22 - CSE101 - pa3
+pa2 - FindComponent.c - File Input/Output
 */
 
 #include<stdio.h>
@@ -12,13 +12,15 @@ pa2 - FindPath.c - File Input/Output
 #include <ctype.h>
 #include "Graph.h"
 
-int main(int argc, char * argv[]){
+// Citation: Professor Tantalo's prompt for FileI/O
+
+int main(int argc, char * argv[]) {
 
     // needed variables
-    int i, n, u, v, comp; // n = #vertices; u, v = vertex of two edges
+    int n, u, v; // n = #vertices; u, v = vertex of two edges
     FILE *in, *out;  // input output files
-    Graph G, T;
-    List S;
+    Graph G, Trans;
+    List Stack = newList();
 
     // check command line for correct number of arguments
     if (argc != 3) {
@@ -39,44 +41,94 @@ int main(int argc, char * argv[]){
         exit(1);
     }
 
-    // scan the first line or first digit to get # vertex
+    // scan the very first digit which gives us the # vertex
     fscanf(in, " %d", &n);
 
-    // initialize a new graph with "n"
-    // initialize u and v to 1 temporarly
+    // create the graph
+    G = newGraph(n);
 
-    // while u or v are not 0:
-        //scan u and v
-        // check if either are 0 and break
-        // call addArc on u and v
-    
+    // initialize to a non 0 value
+    u = v = 1;
+
+    // scan till u and v are 0 and add each Arcs
+    while (u != 0 || v != 0) {
+        fscanf(in, " %d", &u);
+        fscanf(in, " %d", &v);
+        if (u == 0 && v == 0) {
+            break;
+        }
+        addArc(G, u, v);
+    }
+   
+    // print graph and make a new list for the path findings.
     fprintf(out, "Adjacency list representation of G:\n");
-    // print the graph's adj list
+    printGraph(out, G);
+
+    // append adj verticies in stack
+    for(int i = 1; i < getOrder(G) + 1; i++){
+        append(Stack, i);
+    }
+
+    // call dfs
+    DFS(G, Stack);
     fprintf(out, "\n");
 
-    // set graph T to transpose of G
-    // append each vertecies of the graph to the list S (stack) 
-    // call DFS on graph G and T, passing the stack (list S) as well
+    // call the transpose of dfs
+    Trans = transpose(G);
+    //clear(Stack);
+    DFS(Trans, Stack);
+
+    int i = 0;
+    moveFront(Stack);
+    while(index(Stack) != -1) {
+	if(getParent(Trans, get(Stack)) == NIL) {
+	    i++;
+        }
+	moveNext(Stack);
+    }
+
+    fprintf(out, "\nG contains %d strongly connected components:", i);
     
-    // iterate through all vertecies in graph T:
-    //      if the parent of the Tranpose graph's vertecies is NIL:
-    //          increment the counter for strong component
-    fprintf(out, "G contains %d strongly connected components:\n", comp);
+    i = 0;
+    moveBack(Stack);
+    while(index(Stack) != -1) {
+	i++;
+	fprintf(out, "\nComponent %d:", i);
 
-    // set a random variable "x" to the number of strong components
-    // assemble Lists representing the strong components
-    // iterate through the List s:
-    //      set an int variable to the data of list s 
-    //      if the parent of the Tranpose graph's vertecies is NIL:
-    //          decrement x
-    //      append or prepend x to the array list of c at index x     
+	int j = 0;
+	while(1) {
+	    j++;	
+            if(getParent(Trans, get(Stack)) == NIL) {
+		break;
+	    }
+	    movePrev(Stack);	
+	    if(index(Stack) == -1) {
+	        moveFront(Stack);
+		break;
+	    }
+	}
 
-    // iterating i from 0->comp:
-            fprintf(out, "Component %d: ", i+1);
-            // print out the array of List c at index i
-            fprintf(out, "\n");
+	fprintf(out, " %d", get(Stack));
+        int k;
+	for(k = 0; k < j - 1; k++) {
+	    moveNext(Stack);
+	    fprintf(out, " %d", get(Stack));
+	}
 
-    // create and allocate an array of Lists (*List C)to store the strong components
+	for(k = 0; k < j; k++) {
+	    movePrev(Stack);
+	}
+    }
+    fprintf(out, "\n");
 
-    // free all graphs, lists, and close all files
+    // free all graphs, lists
+    // close all files
+    freeGraph(&G);
+    freeGraph(&Trans);
+    freeList(&Stack);
+    freeGraph(&G);
+    fclose(in);
+    fclose(out); 
+
+    return 0;
 }
