@@ -28,59 +28,79 @@ int main (int argc, char* argv[]) {
 	exit(1);
     }
 
-    // scan and initialize Matrix 
+    // scan iand init Matrix 
     fscanf(in, " %d %d %d", &n, &nnza, &nnzb);
 
-    // create two matrices A and B of size n
+    A = newMatrix(n);
+    B = newMatrix(n);
 
-    // from 0 to nnza: 
-    //      scan in the rows, columns and values
-    //      assign them to matrix A
-    
-    // from 0 to nnzb: 
-    //      scan in the rows, columns and values
-    //      assign them to matrix B
+    for(i=0; i < nnza; i++) {
+	fscanf(in, " %d %d %lf", &row, &col, &val);
+        //fprintf(stdout, "before change entry\n");
+	changeEntry(A, row, col, val);
+        //fprintf(stdout, "after change entry\n");
+    }
+
+    for(i=0; i < nnzb; i++){
+        fscanf(in, " %d %d %lf", &row, &col, &val);
+        changeEntry(B, row, col, val);
+    }
 
     fprintf(out, "A has %d non-zero entries:\n", NNZ(A));
-    // print out the matrix
+    printMatrix(out, A);
 
     fprintf(out, "\nB has %d non-zero entries:\n", NNZ(B));
-    // print out the matrix
+    printMatrix(out, B);
     
     fprintf(out, "\n(1.5)*A =\n");
-    // C = multiply everything in A by 1.5
-    // print out the matrix
+    C = scalarMult(1.5, A);
+    printMatrix(out, C);
 
     fprintf(out, "\nA+B =\n");
-    //D = sum of a and b
-    // print out the matrix
+    D = sum(A, B);
+    printMatrix(out, D);
 
     fprintf(out, "\nA+A =\n");
-    // E = addition of A twice
-    // print out the matrix
+    E = sum(A, A);
+    printMatrix(out, E);
 
     fprintf(out, "\nB-A =\n");
-    // F = subtraction of A from B;
-    // print out the matrix
+    F = diff(B, A);
+    printMatrix(out, F);
 
     fprintf(out, "\nA-A =");
-    // G = subtraction of A from A (should be 0)
-    // print out the matrix
+    G = diff(A, A);
+    printMatrix(out, G);
 
     fprintf(out, "\nTranspose(A) =\n");
-    // H = transpose of A
-    // print out the matrix
+    H = transpose(A);
+    printMatrix(out, H);
 
     fprintf(out, "\nA*B =\n");
-    // I = product of the two matrices
-    // print out the matrix
+    I = product(A, B);
+    printMatrix(out, I);
 
     fprintf(out, "\nB*B =\n");
-    // J = product of B twice
-    // print out the matrix
+    J = product(B, B);
+    printMatrix(out, J);
 
-    // free all metrices
-    // close files
 
+    // free all matrices
+    freeMatrix(&A);
+    freeMatrix(&B);
+    freeMatrix(&C);
+    freeMatrix(&D);
+    freeMatrix(&E);
+    freeMatrix(&F);
+    freeMatrix(&G);
+    freeMatrix(&H);
+    freeMatrix(&I);
+    freeMatrix(&J);
+
+    // close all files
+    fclose(in);
+    fclose(out);
+ 
     return 0;
 }
+
