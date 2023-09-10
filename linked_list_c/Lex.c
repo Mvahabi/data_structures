@@ -11,54 +11,100 @@ pa1 - Lex.c - File Input/Output
 #include<string.h>
 #include <ctype.h>
 #include "List.h"
+#define MAX_LEN 300
 
-#define MAX_STR_LEN 300
+// Citation: Professor Tantalo's prompt for FileI/O
 
 int main(int argc, char* argv[]){
 
+    int line_count;
     FILE *in, *out;
-    char** str = NULL; // this is a delcareation of a string array "str"
-    char line[MAX_STR_LEN];
-    List L = newList();
-    int i, j, s_len, line_count = 0;
-
+    char line[MAX_LEN];
+    List in_order = newList();
+    int item, data;
     // check command line for correct number of arguments
+    if(argc != 3){
+        printf("Usage: %s <input file> <output file>\n", argv[0]);
+        exit(1);
+    }
 
-    // open "in" file for reading 
+    // open files for reading and writing 
+    in = fopen(argv[1], "r");
+    if(in==NULL){
+        printf("Unable to open file %s for reading\n", argv[1]);
+        exit(1);
+    }
 
-    // while you are successfully reading in "line", maximum number of 
-    // characters to be read being MAX_STR_LEN:
-        // increment your line_count
-    // close the in file
+    out = fopen(argv[2], "w");
+    if(out==NULL){
+        printf("Unable to open file %s for writing\n", argv[2]);
+        exit(1);
+    }
 
-    // open input file again
-    // allocate memory to "str", line_count being # elements allocated, with sizeof(char*)
-    // iterate "i" from 0->lines_count9exclusive):
-        // read in the lines again like you did before
-        // set temp variable "s_len" to the string length of line
-        // place lines in string array "str"
-        // strip newline like this:
-        while( line[s_len-1]=='\n' || line[s_len-1]=='\r' ){ 
-            line[s_len-1]='\0'; 
-            s_len--;
+    // read each line of input file,count lines, fill in tokens in the array
+    line_count = 0;
+    while(fgets(line, MAX_LEN, in) != NULL)  {
+        line_count++;
+    }
+
+    // close and reopen now that we have line counts
+    fclose(in);
+    in = fopen(argv[1], "r");  
+  
+    // copy the tokens from line to our buffer; dynamically allocate our buffer size with the size of line 
+    int lineSize = 0;
+    int lines = 0;
+    char* buff[line_count];
+    while (fgets(line, MAX_LEN, in) != NULL) {
+        lineSize = strlen(line);
+        buff[lines] = (char *) malloc (sizeof(char) * (lineSize + 1));
+        strcpy(buff[lines], line);
+        lines++;
+    }
+
+    // start organizing in order:
+    // iterate through the line count; set cursor on the front of the list
+    // iterate through the list as long as cursor position is correct; then get the cursor index element
+    // compare if the buffer's data at the cursor index is less than the buffer with loop index
+    // if cursor index is out of place, set the element of the loop index at the back
+    // if the comparison between the loop index and curser index was vise versa, check if cursor index is 0
+    // then set that loop index element at the front; if cursor index is higher, insert it before the cursor
+    data = 0;
+    append(in_order, 0);
+    for (int iter = 1; iter < lines; iter++) {
+        moveFront(in_order);
+        while (index(in_order) > -1) {
+            data = get(in_order);
+            if (strcmp(buff[iter], buff[data]) > 0) {
+                moveNext(in_order);
+                if (index(in_order) < 0) {
+                    append(in_order, iter);
+                }
+            } else {
+                if (index(in_order) == 0) {
+                    prepend(in_order, iter);
+                } else {
+                    insertBefore(in_order, iter);
+                }
+                break;
+            }
         }
-        // reallocate the string array "str[i]" with s_len +1 being the size, this time sizeof(char)
-        //copy line into your "str[i]" array
-
-    // close the "in" file 
-
-    // now append a 0 to the list L
-    // Sort array str by inserting indices into List L
-    // implement an insertion sort using proper List ADTs
-
-    // open "out" file for writing
-
-    // iterate through the list of L from front to back:
-        // print the data's of each element in your string array "str"
-        // HINT: str[get(L)]
+    }
     
-    // close "out" file
+    // print out the list items to out
+    moveFront(in_order);
+    while (index(in_order) > -1)
+    {
+        item = get(in_order);
+        fprintf(out, "%s", buff[item]);
+	moveNext(in_order);
+    }   
 
-    // free the "str" array 
-    // free L
+    // close files and free the list
+    freeList(&in_order); 
+    in_order = NULL;
+    fclose(in);
+    fclose(out);
+
+    return 0;
 }
